@@ -96,3 +96,12 @@ h1 {
 input[type='text'] {
 	margin: 0;
 }
+
+.odpowiedz {
+	letter-spacing: 0.2em;
+	text-transform: capitalize;
+	transition: 0.5s color;
+}
+.poprawna {
+	color: #ff3e00;
+}
