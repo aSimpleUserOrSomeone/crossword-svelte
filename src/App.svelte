@@ -17,6 +17,7 @@
 	var opisy = []
 	$: slowo = ''
 	async function getDefinitions(hasla) {
+		hasla = []
 		opisy = []
 		const promises = []
 		hasla.forEach((h) => {
@@ -38,6 +39,7 @@
 	}
 
 	const newSlowo = () => {
+		document.querySelector('button').disabled = true
 		if (dlugosc < 3) {
 			dlugosc = 3
 		} else if (dlugosc > 14) {
@@ -60,20 +62,41 @@
 		}
 
 		getDefinitions(hasla)
+		document.querySelector('button').disabled = false
 	}
 
+	$: tablicaLiterek = [[]]
 	var gridWidth = 1
 	var najwShift = 0
 	var najwWidthShift = 1
 	const updateGrid = () => {
+		gridWidth = 1
+		najwShift = 0
+		najwWidthShift = 1
 		shift.forEach((s, i) => {
 			najwShift = s > najwShift ? s : najwShift
 			najwWidthShift = hasla[i].length - s > najwWidthShift ? hasla[i].length - s : najwWidthShift
 		})
 
 		gridWidth = najwShift + najwWidthShift
+
+		tablicaLiterek = new Array(gridWidth)
+		for (var i = 0; i < gridWidth; i++) {
+			tablicaLiterek[i] = Array(gridHeight)
+			for (var j = 0; j < gridHeight; j++) {
+				tablicaLiterek[i][j] = ''
+			}
+		}
+		console.log(tablicaLiterek)
 	}
 	$: gridHeight = hasla.length ?? 1
+
+	const letterInput = (e) => {
+		const myBox = e.target
+		myBox.setSelectionRange(myBox.value.length, myBox.value.length)
+		myBox.value = myBox.value[myBox.value.length - 1].toUpperCase()
+		console.log(myBox.value)
+	}
 </script>
 
 <main>
@@ -85,14 +108,30 @@
 	<div class="crossword" style="--grid-width: {gridWidth}; --grid-height: {gridHeight}">
 		{#each Array(gridHeight) as _, row}
 			{#each Array(gridWidth) as _, column}
-				{#if column >= najwShift - shift[row] && column < najwShift + hasla[row].length}
-					<input type="text" class="box" />
+				{#if column >= najwShift - shift[row] && column < najwShift + hasla[row].length - shift[row]}
+					{#if column == najwShift}
+						<input type="text" class="box answer" on:input={letterInput} bind:value={tablicaLiterek[column][row]} />
+					{:else}
+						<input type="text" class="box" on:input={letterInput} bind:value={tablicaLiterek[column][row]} />
+					{/if}
 				{:else}
 					<input type="text" class="box" disabled />
 				{/if}
 			{/each}
 		{/each}
 	</div>
+	<h3>
+		Hasło:
+		<span class="odpowiedz">
+			{#each tablicaLiterek[najwShift] as l}
+				{#if l != ''}
+					{l}
+				{:else}
+					{'_'}
+				{/if}
+			{/each}
+		</span>
+	</h3>
 
 	{#each opisy as def, index}
 		<p>{index + 1}: {def}</p>
@@ -102,10 +141,10 @@
 <style>
 	.box {
 		border: 1px solid #ccc;
-		width: 1.75em;
-		height: 1.75em;
+		width: 1.8em;
+		height: 1.8em;
 		text-align: center;
-		transition: 0.35s border-color;
+		transition: 0.2s border-color;
 	}
 	.box:focus-visible {
 		border-color: #ff3e00;
@@ -113,6 +152,11 @@
 	}
 	.box:disabled {
 		background-color: #ccc;
+		border-radius: 0;
+	}
+
+	.box.answer {
+		background-color: #dfffff;
 	}
 
 	.crossword {
@@ -124,5 +168,10 @@
 		grid-template-columns: repeat(var(--grid-width), auto);
 		grid-template-rows: repeat(var(--grid-height), auto);
 		align-content: center;
+	}
+
+	.odpowiedz {
+		letter-spacing: 0.2em;
+		text-transform: capitalize;
 	}
 </style>
